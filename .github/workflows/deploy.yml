@@ -1,0 +1,34 @@
+name: CI/CD - ThemeWagon Website Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_KEY }}
+          script: |
+            cd Devops-CICD-project2
+
+            docker stop devops-cicd-project2 || true
+            docker rm devops-cicd-project2 || true
+
+            docker build -t devops-cicd-project2 .
+
+            docker run -d \
+              --restart unless-stopped \
+              -p 80:80 \
+              --name devops-cicd-project2 \
+              devops-cicd-project2
